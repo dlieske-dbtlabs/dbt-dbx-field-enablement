@@ -194,3 +194,13 @@ models:
         data_type: decimal(18,2)
         tests:
           - not_null
+
+
+  - name: metricflow_time_spine
+    description: "Daily time spine for MetricFlow and Semantic Layer time-based joins."
+    time_spine:
+      standard_granularity_column: date_day
+    columns:
+      - name: date_day
+        description: "One row per calendar day."
+        granularity: day

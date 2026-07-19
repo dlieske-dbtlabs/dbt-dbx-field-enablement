@@ -24,6 +24,8 @@ semantic_models:
       Defines the customer grain, segmentation dimensions, and value measures.
       This is the authoritative definition of a "customer" for all BI and Genie queries.
     model: ref('dim_customers')
+    defaults:
+      agg_time_dimension: created_date
 
     entities:
       - name: customer
@@ -83,6 +85,8 @@ semantic_models:
       Revenue here = amount_paid for orders with status = 'completed'.
       This definition is version-controlled — any change goes through a PR.
     model: ref('fct_orders')
+    defaults:
+      agg_time_dimension: order_date
 
     entities:
       - name: order
@@ -153,7 +157,7 @@ semantic_models:
   - name: products
     description: >
       Semantic model built on dim_products. One row per product.
-      Defines the product grain, category dimension, and pricing measures.
+      Defines the product grain and category dimensions.
       This is the authoritative definition of a "product" for all BI and Genie queries.
     model: ref('dim_products')
 
@@ -175,17 +179,6 @@ semantic_models:
         type: categorical
         expr: cast(is_active as string)
         description: "Whether the product is currently available for purchase (true/false)."
-
-    measures:
-      - name: product_count
-        agg: count_distinct
-        expr: product_id
-        description: "Distinct count of products in scope."
-
-      - name: avg_unit_price
-        agg: average
-        expr: unit_price
-        description: "Average list price across products in scope (USD)."
 
 # ──────────────────────────────────────────────────────────────────────────────
 # Metrics — the named, governed calculations exposed to Genie and BI tools
@@ -241,10 +234,10 @@ metrics:
     type: ratio
     type_params:
       numerator:
-        name: order_count
+        name: total_orders
         filter: "{{ Dimension('order__status') }} = 'returned'"
       denominator:
-        name: order_count
+        name: total_orders
 
   # ── Customer metrics ──────────────────────────────────────────────────────
   - name: total_customers
@@ -302,19 +295,3 @@ metrics:
       measure:
         name: total_items
 
-  # ── Product metrics ────────────────────────────────────────────────────────
-  - name: total_products
-    label: "Total Products"
-    description: "Distinct count of all products in the catalog."
-    type: simple
-    type_params:
-      measure:
-        name: product_count
-
-  - name: avg_product_price
-    label: "Average Product Price (USD)"
-    description: "Average list price across all products in the catalog."
-    type: simple
-    type_params:
-      measure:
-        name: avg_unit_price
